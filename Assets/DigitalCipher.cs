@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -113,5 +115,89 @@ public class DigitalCipher : MonoBehaviour {
 
         Debug.LogFormat(@"[Digital Cipher #{0}] Input String: {1} Expected String: {2}", moduleId, inputText, outputTextCalculated);
 
+    }
+
+    //twitch plays
+    private bool cmdIsValid(string s)
+    {
+        string[] things = { "A","B","C","D","E","F","G","H","I" };
+        for(int i = 0; i < s.Length; i++)
+        {
+            string comp = s[i].ToString().ToUpper();
+            bool good = false;
+            for(int j = 0; j < things.Length; j++)
+            {
+                if (things[j].Equals(comp))
+                {
+
+                    good = true;
+                    break;
+                }
+            }
+            if(good == false)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    #pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"!{0} press <letters> [Presses the specified string of letters]";
+    #pragma warning restore 414
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        string[] parameters = command.Split(' ');
+        if (Regex.IsMatch(parameters[0], @"^\s*press\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            if(parameters.Length == 2)
+            {
+                if (cmdIsValid(parameters[1]))
+                {
+                    yield return null;
+                    for(int i = 0; i < parameters[1].Length; i++)
+                    {
+                        if (parameters[1][i].Equals('A') || parameters[1][i].Equals('a'))
+                        {
+                            Buttons[0].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('B') || parameters[1][i].Equals('b'))
+                        {
+                            Buttons[1].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('C') || parameters[1][i].Equals('c'))
+                        {
+                            Buttons[2].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('D') || parameters[1][i].Equals('d'))
+                        {
+                            Buttons[3].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('E') || parameters[1][i].Equals('e'))
+                        {
+                            Buttons[4].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('F') || parameters[1][i].Equals('f'))
+                        {
+                            Buttons[5].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('G') || parameters[1][i].Equals('g'))
+                        {
+                            Buttons[6].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('H') || parameters[1][i].Equals('h'))
+                        {
+                            Buttons[7].OnInteract();
+                        }
+                        else if (parameters[1][i].Equals('I') || parameters[1][i].Equals('i'))
+                        {
+                            Buttons[8].OnInteract();
+                        }
+                        yield return new WaitForSeconds(0.1f);
+                    }
+                }
+            }
+            yield break;
+        }
     }
 }
