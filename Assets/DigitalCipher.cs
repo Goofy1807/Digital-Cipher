@@ -24,6 +24,8 @@ public class DigitalCipher : MonoBehaviour {
 
     private int timesPressed = 0;
 
+    private bool activated = false;
+
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
@@ -34,6 +36,7 @@ public class DigitalCipher : MonoBehaviour {
         {
             Buttons[i].OnInteract += ButtonPressed(i);
         }
+        BombModule.OnActivate += OnActivate;
     }
 
     private KMSelectable.OnInteractHandler ButtonPressed(int buttonPressed)
@@ -43,7 +46,7 @@ public class DigitalCipher : MonoBehaviour {
 
             Buttons[buttonPressed].AddInteractionPunch();
 
-            if (moduleSolved)
+            if (moduleSolved || !activated)
                 return false;
 
             if (Array.IndexOf(Alphanumeric, Char.ToLowerInvariant(outputTextCalculated[timesPressed])) == buttonPressed)
@@ -57,6 +60,7 @@ public class DigitalCipher : MonoBehaviour {
                     BombModule.HandlePass();
                     Debug.LogFormat(@"[Digital Cipher #{0}] Module was solved. Well done", moduleId);
                     moduleSolved = true;
+                    StartCoroutine(solveAnim());
                 }
             }
             else
@@ -73,8 +77,13 @@ public class DigitalCipher : MonoBehaviour {
 
         moduleId = moduleIdCounter++;
 
-        StartCoroutine(GenerateEverything());
+        //StartCoroutine(GenerateEverything());
 
+    }
+
+    void OnActivate()
+    {
+        StartCoroutine(GenerateEverything());
     }
 
     private IEnumerator GenerateEverything()
@@ -115,6 +124,19 @@ public class DigitalCipher : MonoBehaviour {
 
         Debug.LogFormat(@"[Digital Cipher #{0}] Input String: {1} Expected String: {2}", moduleId, inputText, outputTextCalculated);
 
+        activated = true;
+
+    }
+
+    private IEnumerator solveAnim()
+    {
+        yield return new WaitForSeconds(0.75f);
+        for (int i = 1; i <= 15; i++)
+        {
+            Input.text = Input.text.Substring(0, Input.text.Length - 1);
+            Output.text = Output.text.Substring(0, Output.text.Length - 1);
+            yield return new WaitForSeconds(0.2f);
+        }
     }
 
     //twitch plays
@@ -143,18 +165,22 @@ public class DigitalCipher : MonoBehaviour {
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"!{0} press <letters> [Presses the specified string of letters]";
+    private readonly string TwitchHelpMessage = @"!{0} press <letters> [Presses the specified string of letters] | Valid letters are A-I";
     #pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {
         string[] parameters = command.Split(' ');
         if (Regex.IsMatch(parameters[0], @"^\s*press\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
         {
-            if(parameters.Length == 2)
+            yield return null;
+            if (parameters.Length > 2)
+            {
+                yield return "sendtochaterror Too many parameters!";
+            }
+            else if(parameters.Length == 2)
             {
                 if (cmdIsValid(parameters[1]))
                 {
-                    yield return null;
                     for(int i = 0; i < parameters[1].Length; i++)
                     {
                         if (parameters[1][i].Equals('A') || parameters[1][i].Equals('a'))
@@ -196,8 +222,27 @@ public class DigitalCipher : MonoBehaviour {
                         yield return new WaitForSeconds(0.1f);
                     }
                 }
+                else
+                {
+                    yield return "sendtochaterror The specified string of letters to press '" + parameters[1] + "' is invalid!";
+                }
+            }
+            else if (parameters.Length == 1)
+            {
+                yield return "sendtochaterror Please specify the string of letters to press!";
             }
             yield break;
+        }
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        while (!activated) { yield return true; yield return new WaitForSeconds(0.1f); }
+        char[] chars = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I' };
+        for(int i = timesPressed; i < outputTextCalculated.Length; i++)
+        {
+            Buttons[Array.IndexOf(chars, outputTextCalculated[i])].OnInteract();
+            yield return new WaitForSeconds(0.1f);
         }
     }
 }
